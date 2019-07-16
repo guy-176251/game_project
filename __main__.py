@@ -4,6 +4,7 @@ from sprites import *
 from pygame.locals import *
 
 def main():
+
     pygame.init()
     pygame.display.set_caption('Totally not MegaMan')
 
