@@ -25,8 +25,6 @@ def main():
     MOVE_TICK = pygame.USEREVENT + 2
     pygame.time.set_timer(MOVE_TICK, 10)
 
-    print(MOVE_TICK)
-
     while True:
 
         for event in pygame.event.get():
