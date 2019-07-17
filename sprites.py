@@ -11,63 +11,84 @@ class Wall(pygame.sprite.Sprite):
         self.rect.y = y
         self.rect.x = x
 
-#class Wall(pygame.sprite.Sprite):
-#    def __init__(self, rect, x, y, *, platform = False):
-#        super().__init__()
-#
-#        self.image = pygame.Surface(rect)
-#        self.image.fill(BLUE)
-#
-#        self.rect = self.image.get_rect()
-#        self.rect.y = y
-#        self.rect.x = x
-#
-#        self.platform = platform
+class Shot(pygame.sprite.Sprite):
+    def __init__(self, img, player):
+        super().__init__()
+        self.image = img
+        self.rect  = self.image.get_rect()
+        self.fwd   = player.fwd
+
+        if self.fwd == FWD:
+            self.rect.midleft = player.rect.midright
+        else:
+            self.rect.midright = player.rect.midleft
+
+        self.rect.y += 8
+
+        self.speed = 8
+
+    def update(self):
+        if self.fwd == FWD:
+            self.rect.x += self.speed
+            if self.rect.right > 800:
+                self.kill()
+        else:
+            self.rect.x -= self.speed
+            if self.rect.left < 0:
+                self.kill()
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
-        super(Player, self).__init__()
+        super().__init__()
 
         self.imgs = {
             img: {
-                d: pygame.image.load(f'{img}/{d}/1.png').convert_alpha()
+                d: {
+                    m: pygame.image.load(f'{img}/{d}/{m}/1.png').convert_alpha()
+                    for m in (BUSTER, NONE)
+                }
                 for d in (FWD, BACK)
             }
             for img in (RUN, JUMP, STAND)
         }
+
         self.imgs[RUNNING] = {
-            d: [pygame.image.load(f'run/{d}/{n}.png').convert_alpha() for n in (2,3,4)]
+            d: {
+                m: [pygame.image.load(f'run/{d}/{m}/{n}.png').convert_alpha() for n in (2,3,4)]
+                for m in (BUSTER, NONE)
+            }
             for d in (FWD, BACK)
         }
 
         self.run_ind   = 0
         self.run_cycle = True
 
-        self.image  = self.imgs[STAND][FWD]
-        self.rect   = self.image.get_rect()
-        self.rect.y = FLOOR
-        self.walls  = None
-
         self.fwd        = FWD
+        self.buster     = NONE
         self.if_moving  = False
         self.if_falling = False
         self.if_running = False
 
+        self.image  = self.imgs[STAND][FWD][NONE]
+        self.rect   = self.image.get_rect()
+        self.rect.y = FLOOR
+        self.walls  = None
+
         self.jump_tick     = 0
         self.max_jump_tick = 5
 
-    def animate(self):
+    def update(self):
 
         if self.if_falling:
-            self.image = self.imgs[JUMP][self.fwd]
+            self.image = self.imgs[JUMP][self.fwd][self.buster]
 
         elif self.if_moving:
 
             if not self.if_running:
-                self.image = self.imgs[RUN][self.fwd]
+                self.image = self.imgs[RUN][self.fwd][self.buster]
                 self.if_running = True
             else:
-                self.image = self.imgs[RUNNING][self.fwd][self.run_ind]
+                self.image = self.imgs[RUNNING][self.fwd][self.buster][self.run_ind]
 
                 if self.run_cycle:
                     self.run_ind += 1
@@ -80,8 +101,10 @@ class Player(pygame.sprite.Sprite):
                     self.run_cycle = True
 
         else:
-            self.image = self.imgs[STAND][self.fwd]
+            self.image = self.imgs[STAND][self.fwd][self.buster]
             self.if_running = False
+
+        self.buster  = NONE
 
     def move(self, key_press):
         if key_press[K_SPACE] and self.jump_tick < self.max_jump_tick:
