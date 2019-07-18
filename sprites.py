@@ -38,7 +38,7 @@ class Shot(pygame.sprite.Sprite):
                 self.kill()
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, *, walls = None, screen = None):
+    def __init__(self, *, walls = None, screen):
         super().__init__()
 
         self.imgs = {
@@ -76,8 +76,7 @@ class Player(pygame.sprite.Sprite):
         self.jump_tick     = 0
         self.max_jump_tick = 5
 
-        if screen:
-            self.screen_width, self.screen_height = screen.get_size()
+        self.screen = screen
 
     def update(self):
 
@@ -156,13 +155,13 @@ class Player(pygame.sprite.Sprite):
 
         if self.rect.left < 0:
             self.rect.left = 0
-        elif self.rect.right > self.screen_width:
-            self.rect.right = self.screen_width
+        elif self.rect.right > self.screen.get_width():
+            self.rect.right = self.screen.get_width()
 
         if self.rect.top <= 0:
             self.rect.top = 0
-        elif self.rect.bottom >= self.screen_height:
-            self.rect.bottom = self.screen_height
+        elif self.rect.bottom >= self.screen.get_height():
+            self.rect.bottom = self.screen.get_height()
             self.if_falling = False
 
         if not self.if_falling and not key_press[K_SPACE]:
