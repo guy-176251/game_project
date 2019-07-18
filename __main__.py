@@ -12,9 +12,17 @@ def main():
     bg     = pygame.image.load('bg.jpg').convert()
     shot   = pygame.image.load('shot.png').convert_alpha()
 
-    player = Player()
-    walls  = pygame.sprite.Group(Wall('platform.png', 400, 445))
-    player.walls = walls
+    wall_groups = [
+        [('platform.png', 400, 445)]
+    ]
+
+    level = {
+        ind + 1: [Wall(*dim) for dim in lvl]
+        for ind, lvl in enumerate(wall_groups)
+    }
+
+    walls  = pygame.sprite.Group(level[1])
+    player = Player(walls = walls, screen = screen)
 
     all_sprites = pygame.sprite.Group(player, walls)
     all_shots   = pygame.sprite.Group()
@@ -36,7 +44,7 @@ def main():
             elif event.type == QUIT:
                 return
 
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 all_shots.add(Shot(shot, player))
                 player.buster = BUSTER
 

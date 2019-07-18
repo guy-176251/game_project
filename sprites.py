@@ -38,7 +38,7 @@ class Shot(pygame.sprite.Sprite):
                 self.kill()
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, *, walls = None, screen = None):
         super().__init__()
 
         self.imgs = {
@@ -71,11 +71,13 @@ class Player(pygame.sprite.Sprite):
 
         self.image  = self.imgs[STAND][FWD][NONE]
         self.rect   = self.image.get_rect()
-        self.rect.y = FLOOR
-        self.walls  = None
+        self.walls  = walls
 
         self.jump_tick     = 0
         self.max_jump_tick = 5
+
+        if screen:
+            self.screen_width, self.screen_height = screen.get_size()
 
     def update(self):
 
@@ -109,7 +111,7 @@ class Player(pygame.sprite.Sprite):
     def move(self, key_press):
         if key_press[K_SPACE] and self.jump_tick < self.max_jump_tick:
             if not self.if_falling:
-                self.rect.move_ip(0, -50)
+                self.rect.move_ip(0, -70)
                 self.if_falling = True
             else:
                 self.rect.move_ip(0, -3)
@@ -154,13 +156,13 @@ class Player(pygame.sprite.Sprite):
 
         if self.rect.left < 0:
             self.rect.left = 0
-        elif self.rect.right > 800:
-            self.rect.right = 800
+        elif self.rect.right > self.screen_width:
+            self.rect.right = self.screen_width
 
         if self.rect.top <= 0:
             self.rect.top = 0
-        elif self.rect.y >= FLOOR:
-            self.rect.y = FLOOR
+        elif self.rect.bottom >= self.screen_height:
+            self.rect.bottom = self.screen_height
             self.if_falling = False
 
         if not self.if_falling and not key_press[K_SPACE]:
