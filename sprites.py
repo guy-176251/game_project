@@ -2,6 +2,8 @@ import pygame
 from const import *
 from pygame.locals import *
 
+Walls = lambda lvl: pygame.sprite.Group([Wall(*dim) for dim in lvl])
+
 class Wall(pygame.sprite.Sprite):
     def __init__(self, img, x, y):
         super().__init__()
@@ -25,7 +27,7 @@ class Shot(pygame.sprite.Sprite):
 
         self.rect.y += 8
 
-        self.speed = 8
+        self.speed = 10
 
     def update(self):
         if self.fwd == FWD:
@@ -132,7 +134,7 @@ class Player(pygame.sprite.Sprite):
             else:
                 self.if_falling = True
 
-        move = 3 if self.if_moving else 1
+        move = 3 #if self.if_moving else 1
 
         if key_press[K_d]:
             self.rect.move_ip(move, 0)
