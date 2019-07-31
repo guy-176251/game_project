@@ -55,7 +55,7 @@ class Player(pygame.sprite.Sprite):
         self.imgs = {
             img: {
                 d: {
-                    m: pygame.image.load(f'{img}/{d}/{m}/1.png').convert_alpha()
+                    m: pygame.image.load(f'images/player/{img}/{d}/{m}/1.png').convert_alpha()
                     for m in (BUSTER, NONE)
                 }
                 for d in (FWD, BACK)
@@ -65,7 +65,7 @@ class Player(pygame.sprite.Sprite):
 
         self.imgs[RUNNING] = {
             d: {
-                m: [pygame.image.load(f'run/{d}/{m}/{n}.png').convert_alpha() for n in (2,3,4)]
+                m: [pygame.image.load(f'images/player/run/{d}/{m}/{n}.png').convert_alpha() for n in (2,3,4)]
                 for m in (BUSTER, NONE)
             }
             for d in (FWD, BACK)

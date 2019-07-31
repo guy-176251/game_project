@@ -16,7 +16,8 @@ class Level(pygame.sprite.Sprite):
 
         self.walls   = [pygame.Rect(*w) for w in walls]
         self.grid    = grid
-        self.test_grid = [[0 for _ in range(len(self.grid[0]))] for _ in range(len(self.grid))]
+        self.t_grid = [[0 for _ in range(len(self.grid[0]))] for _ in range(len(self.grid))]
+        self.t_coordinates = set()
         self.display: pygame.Surface = display
         self.player  = player
         self.shots   = shots
@@ -28,8 +29,12 @@ class Level(pygame.sprite.Sprite):
         self.shots.update(y)
 
     @property
-    def t_grid(self):
-        return '\n'.join(' '.join(str(n) for n in row) for row in self.test_grid)
+    def test_grid(self):
+        return '\n'.join(' '.join(str(n) for n in row) for row in self.t_grid)
+
+    @property
+    def test_coordinates(self):
+        return '\n'.join(self.t_coordinates)
 
     @property
     def x(self):
@@ -70,8 +75,8 @@ class Level(pygame.sprite.Sprite):
             else:
                 self.player.jump_tick = self.player.max_jump_tick
 
-            print(f'below screen: {self.player.rect.centery >= self.display.get_height()}')
-            print(f'grid {self.x}, {self.y}: {self.grid[self.y][self.x]}')
+            if self.player.rect.centery >= self.display.get_height():
+                self.t_coordinates.add(f'grid {self.x}, {self.y}: {self.grid[self.y][self.x]}')
 
             if All(self.player.rect.centery >= self.display.get_height(),
                    self.grid[self.y][self.x]):
@@ -122,4 +127,4 @@ class Level(pygame.sprite.Sprite):
         if not self.player.if_falling and not key_press[K_SPACE]:
             self.player.jump_tick = 0
 
-        self.test_grid[self.y][self.x] = self.grid[self.y][self.x]
+        self.t_grid[self.y][self.x] = self.grid[self.y][self.x]

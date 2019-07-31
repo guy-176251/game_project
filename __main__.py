@@ -14,8 +14,8 @@ def main():
     screen = pygame.display.set_mode(SCREEN_SIZE)
     fps    = pygame.time.Clock()
 
-    shot   = pygame.image.load('shot.png').convert_alpha()
-    splash = pygame.image.load('splash.png').convert_alpha()
+    shot   = pygame.image.load('images/shot.png').convert_alpha()
+    splash = pygame.image.load('images/splash.png').convert_alpha()
 
     bg.fill((0,0,0))
 
@@ -88,6 +88,7 @@ def main():
 
         pygame.display.flip()
 
-    print(level.t_grid)
+    print(level.test_grid)
+    print(level.test_coordinates)
 
 main()
