@@ -1,37 +1,43 @@
 import pygame
 from const import *
+from utils import *
 from sprites import *
 from pygame.locals import *
+from level import Level
 
 def main():
 
     pygame.init()
     pygame.display.set_caption('Totally not MegaMan')
 
-    screen = pygame.display.set_mode((800, 600))
+    bg     = pygame.Surface(SCREEN_SIZE)
+    screen = pygame.display.set_mode(SCREEN_SIZE)
     fps    = pygame.time.Clock()
 
-    bg     = pygame.image.load('bg.jpg').convert()
     shot   = pygame.image.load('shot.png').convert_alpha()
     splash = pygame.image.load('splash.png').convert_alpha()
 
-    level = [
-        [('platform.png', 400, 445)]
-    ]
+    bg.fill((0,0,0))
 
-    walls  = Walls(level[0])
-    player = Player(walls = walls, screen = screen)
+    player = Player(screen=screen)
+    all_shots = pygame.sprite.Group()
+    all_sprites = pygame.sprite.Group(player)
 
-    all_sprites = pygame.sprite.Group(player, walls)
-    all_shots   = pygame.sprite.Group()
+    with open('map/dimensions.txt', 'r') as f:
+        walls = [eval(f'({r})') for r in f.read().split('\n')[1:] if r != '']
+    with open('map/grid.txt', 'r') as f:
+        grid = List([List(eval(f'[{l}]')) for l in f.read().split('\n') if l != ''])
 
-    ticks = {
-        'animate': (pygame.USEREVENT + 1, 100),
-        #'move'   : (pygame.USEREVENT + 2, 10)
-    }
+    level = Level(
+        image = 'map/image.png',
+        player = player,
+        display = screen,
+        walls = walls,
+        grid = grid,
+        shots =all_shots
+    )
 
-    for t in ticks:
-        pygame.time.set_timer(*ticks[t])
+    pygame.time.set_timer(ANIMATE, 120)
 
     # splash loop
     splash_running = True
@@ -40,7 +46,7 @@ def main():
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 splash_running = False
-        screen.blit(bg, (0,0))
+        screen.blit(level.image, (0,0))
         screen.blit(splash, (0,0))
         pygame.display.flip()
 
@@ -49,7 +55,7 @@ def main():
     while game_running:
         fps.tick(60)
 
-        player.move(pygame.key.get_pressed())
+        level.move(pygame.key.get_pressed())
         all_shots.update()
 
         for event in pygame.event.get():
@@ -60,20 +66,28 @@ def main():
                 game_running = False
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                all_shots.add(Shot(shot, player))
+                all_shots.add(Shot(shot, player, SCREEN_SIZE[0]))
                 player.buster = BUSTER
 
-            #elif event.type == ticks['move'][0]:
-            #    player.move(pygame.key.get_pressed())
-            #    all_shots.update()
-
-            elif event.type == ticks['animate'][0]:
+            #elif event.type == ticks['animate'][0]:
+            elif event.type == ANIMATE:
                 all_sprites.update()
 
         screen.blit(bg, (0,0))
-        screen.blits((spr.image, spr.rect) for spr in all_sprites)
+        screen.blit(level.image, level.rect)
+
+        #temp_walls = []
+        #for wall in level.walls:
+        #    surf = pygame.Surface((wall.w, wall.h))
+        #    surf.fill((0,0,255))
+        #    temp_walls.append((surf, wall))
+        #screen.blits(temp_walls)
+
+        screen.blit(player.image, player.img_point)
         screen.blits((spr.image, spr.rect) for spr in all_shots)
 
         pygame.display.flip()
+
+    print(level.t_grid)
 
 main()

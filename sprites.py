@@ -14,33 +14,42 @@ class Wall(pygame.sprite.Sprite):
         self.rect.x = x
 
 class Shot(pygame.sprite.Sprite):
-    def __init__(self, img, player):
+    def __init__(self, img, player, screen_width):
         super().__init__()
         self.image = img
-        self.rect  = self.image.get_rect()
+        self.rect: pygame.Rect = self.image.get_rect()
         self.fwd   = player.fwd
+        self.screen_width = screen_width
 
         if self.fwd == FWD:
-            self.rect.midleft = player.rect.midright
+            self.rect.midleft = (player.rect.midright[0] + player.width_gap, player.rect.midright[1])
         else:
-            self.rect.midright = player.rect.midleft
+            self.rect.midright = (player.rect.midleft[0] - player.width_gap, player.rect.midleft[1])
 
-        self.rect.y += 8
+        if not player.if_falling:
+            self.rect.y += 8
+        else:
+            self.rect.y -= 8
+
+        self.rect.y -= player.height_gap
 
         self.speed = 10
 
-    def update(self):
-        if self.fwd == FWD:
-            self.rect.x += self.speed
-            if self.rect.right > 800:
-                self.kill()
+    def update(self, y = None):
+        if y == None:
+            if self.fwd == FWD:
+                self.rect.x += self.speed
+                if self.rect.right > self.screen_width:
+                    self.kill()
+            else:
+                self.rect.x -= self.speed
+                if self.rect.left < 0:
+                    self.kill()
         else:
-            self.rect.x -= self.speed
-            if self.rect.left < 0:
-                self.kill()
+            self.rect.move_ip(0, y)
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, *, walls = None, screen):
+    def __init__(self, *, walls = None, screen = None):
         super().__init__()
 
         self.imgs = {
@@ -72,13 +81,24 @@ class Player(pygame.sprite.Sprite):
         self.if_running = False
 
         self.image  = self.imgs[STAND][FWD][NONE]
-        self.rect   = self.image.get_rect()
+        self.rect: pygame.Rect = self.image.get_rect()
         self.walls  = walls
+        self.screen = screen
+
+        self.rect.center = (self.screen.get_rect().centerx, 0)
 
         self.jump_tick     = 0
-        self.max_jump_tick = 5
+        self.jump_steps    = [n**2 for n in range(9, 0, -1)]
+        self.max_jump_tick = len(self.jump_steps)
 
-        self.screen = screen
+        self.rect.width = 30
+        self.rect.height = 60
+        self.width_gap = int((64 - self.rect.width) / 2)
+        self.height_gap = 64 - self.rect.height
+
+    @property
+    def img_point(self):
+        return (self.rect.x - self.width_gap, self.rect.y - self.height_gap)
 
     def update(self):
 
@@ -109,7 +129,10 @@ class Player(pygame.sprite.Sprite):
 
         self.buster  = NONE
 
-    def move(self, key_press):
+    def move(self, x, y):
+        self.rect.move_ip(x, y)
+
+    def move_old(self, key_press):
         if key_press[K_SPACE] and self.jump_tick < self.max_jump_tick:
             if not self.if_falling:
                 self.rect.move_ip(0, -70)

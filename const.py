@@ -1,3 +1,4 @@
+import pygame
 from pygame.locals import *
 
 # Colors
@@ -14,3 +15,5 @@ STAND   = 'stand'
 RUNNING = 'running'
 BUSTER  = 'buster'
 NONE    = 'none'
+ANIMATE = pygame.USEREVENT + 1
+SCREEN_SIZE = (512, 448)
