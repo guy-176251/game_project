@@ -2,17 +2,6 @@ import pygame
 from const import *
 from pygame.locals import *
 
-Walls = lambda lvl: pygame.sprite.Group([Wall(*dim) for dim in lvl])
-
-class Wall(pygame.sprite.Sprite):
-    def __init__(self, img, x, y):
-        super().__init__()
-
-        self.image = pygame.image.load(img).convert_alpha()
-        self.rect = self.image.get_rect()
-        self.rect.y = y
-        self.rect.x = x
-
 class Shot(pygame.sprite.Sprite):
     def __init__(self, img, player, screen_width):
         super().__init__()
@@ -22,9 +11,11 @@ class Shot(pygame.sprite.Sprite):
         self.screen_width = screen_width
 
         if self.fwd == FWD:
-            self.rect.midleft = (player.rect.midright[0] + player.width_gap, player.rect.midright[1])
+            self.rect.midleft = (player.rect.midright[0] + player.width_gap,
+                                 player.rect.midright[1])
         else:
-            self.rect.midright = (player.rect.midleft[0] - player.width_gap, player.rect.midleft[1])
+            self.rect.midright = (player.rect.midleft[0] - player.width_gap,
+                                  player.rect.midleft[1])
 
         if not player.if_falling:
             self.rect.y += 8
@@ -47,6 +38,73 @@ class Shot(pygame.sprite.Sprite):
                     self.kill()
         else:
             self.rect.move_ip(0, y)
+
+class Enemy(pygame.sprite.Sprite):
+
+    speed = 3
+
+    def __init__(self, images, player, platform, display, midbottom):
+        super().__init__()
+        self.images = images
+        self.display = display
+        self.player = player
+        self.platform: pygame.Rect = platform
+        self.midbottom = list(midbottom)
+
+        if self.player.rect.x < self.midbottom[0]:
+            self.fwd = BACK
+        else:
+            self.fwd = FWD
+
+        self.image = self.images[self.fwd][0]
+        self.rect: pygame.Rect = self.image.get_rect()
+        self.rect.midbottom = self.midbottom
+
+        self.max_wait_tick = 10
+        self.wait_tick = 0
+
+        self.max_move_tick = 10
+        self.move_tick = 0
+
+        self.if_moving = False
+        self.if_proximity = False
+
+    @property
+    def step(self):
+        if self.fwd == FWD:
+            return self.speed
+        else:
+            return self.speed * -1
+
+    def update(self, *, animate = False, move = False):
+
+        #if self.player.rect.centerx
+
+        if animate:
+            pass
+        if move:
+            if self.move_tick < self.max_move_tick:
+                self.move()
+                self.move_tick += 1
+                self.if_moving = True
+            else:
+                self.if_moving = False
+
+
+    def animate(self):
+        # change image
+        self.rect = self.image.get_rect()
+        self.rect.midbottom = self.midbottom
+
+    def move(self):
+        move_value = self.rect.midbottom[0] + self.step
+
+        if move_value > self.platform.right and self.fwd == FWD:
+            self.fwd = BACK
+        elif move_value < self.platform.left and self.fwd == BACK:
+            self.fwd = FWD
+
+        self.midbottom[0] += self.step
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, *, walls = None, screen = None):

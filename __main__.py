@@ -14,8 +14,14 @@ def main():
     screen = pygame.display.set_mode(SCREEN_SIZE)
     fps    = pygame.time.Clock()
 
-    shot   = pygame.image.load('images/shot.png').convert_alpha()
-    splash = pygame.image.load('images/splash.png').convert_alpha()
+    shot_img   = pygame.image.load('images/shot.png').convert_alpha()
+    splash_img = pygame.image.load('images/splash.png').convert_alpha()
+    enemy_img  = {
+        d: [pygame.image.load(f'images/enemy/{d}/{n + 1}.png').convert_alpha()
+            for n in range(4)]
+        for d in (FWD, BACK)
+
+    }
 
     bg.fill((0,0,0))
 
@@ -47,7 +53,7 @@ def main():
             if event.type == KEYDOWN:
                 splash_running = False
         screen.blit(level.image, (0,0))
-        screen.blit(splash, (0,0))
+        screen.blit(splash_img, (0,0))
         pygame.display.flip()
 
     # game loop
@@ -66,7 +72,7 @@ def main():
                 game_running = False
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                all_shots.add(Shot(shot, player, SCREEN_SIZE[0]))
+                all_shots.add(Shot(shot_img, player, SCREEN_SIZE[0]))
                 player.buster = BUSTER
 
             #elif event.type == ticks['animate'][0]:

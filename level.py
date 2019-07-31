@@ -16,7 +16,9 @@ class Level(pygame.sprite.Sprite):
 
         self.walls   = [pygame.Rect(*w) for w in walls]
         self.grid    = grid
-        self.t_grid = [[0 for _ in range(len(self.grid[0]))] for _ in range(len(self.grid))]
+        self.t_grid = [[0 for _ in range(len(self.grid[0]))]
+                       for _ in range(len(self.grid))]
+
         self.t_coordinates = set()
         self.display: pygame.Surface = display
         self.player  = player
