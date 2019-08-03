@@ -85,7 +85,7 @@ class Level(pygame.sprite.Sprite):
 
         else:
             self.player.if_falling = True
-            self.player.move(0, 6)
+            self.player.move(0, 8)
             walls_hit = [w for w in self.walls if self.player.rect.colliderect(w)]
 
             if walls_hit:
@@ -104,7 +104,7 @@ class Level(pygame.sprite.Sprite):
                 self.move_all(0, -self.display.get_height())
                 self.player.move(0, -self.display.get_height())
 
-        move = 3 if self.player.if_moving else 1
+        move = 5 if self.player.if_moving else 1
 
         if key_press[K_d]:
             self.player.move(move, 0)

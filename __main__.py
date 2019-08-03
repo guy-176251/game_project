@@ -15,12 +15,14 @@ def main():
             print('The main folder/file name needs to be called "game_project" for the game to run.')
             return
 
-    pygame.mixer.pre_init()
+    pygame.mixer.pre_init(frequency=22050, size=-16, channels=2, buffer=512)
     pygame.init()
     pygame.display.set_caption('MegaMan: Pump Man Stage')
 
     pygame.mixer.music.load('sounds/level.mp3')
     pygame.mixer.music.play(-1)
+
+    buster_sound = pygame.mixer.Sound('sounds/buster.wav')
 
     bg     = pygame.Surface(SCREEN_SIZE)
     screen = pygame.display.set_mode(SCREEN_SIZE)
@@ -108,6 +110,7 @@ def main():
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     all_shots.add(Shot(shot_img, player, SCREEN_SIZE[0]))
                     player.buster = BUSTER
+                    buster_sound.play()
 
                 elif event.type == ANIMATE:
                     all_sprites.update()
