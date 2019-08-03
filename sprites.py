@@ -146,7 +146,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.center = (self.screen.get_rect().centerx, 0)
 
         self.jump_tick     = 0
-        self.jump_steps    = [n**2 for n in range(7, 0, -1)]
+        self.jump_steps    = [n**2 for n in range(8, 0, -1)]
         self.max_jump_tick = len(self.jump_steps)
 
         self.rect.width = 30

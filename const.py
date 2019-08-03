@@ -12,5 +12,6 @@ STAND   = 'stand'
 RUNNING = 'running'
 BUSTER  = 'buster'
 NONE    = 'none'
+CLIMB   = 'climb'
 ANIMATE = pygame.USEREVENT + 1
 SCREEN_SIZE = (512, 448)

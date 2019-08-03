@@ -15,8 +15,12 @@ def main():
             print('The main folder/file name needs to be called "game_project" for the game to run.')
             return
 
+    pygame.mixer.pre_init()
     pygame.init()
     pygame.display.set_caption('MegaMan: Pump Man Stage')
+
+    pygame.mixer.music.load('sounds/level.mp3')
+    pygame.mixer.music.play(-1)
 
     bg     = pygame.Surface(SCREEN_SIZE)
     screen = pygame.display.set_mode(SCREEN_SIZE)
@@ -111,12 +115,21 @@ def main():
             screen.blit(bg, (0,0))
             screen.blit(level.image, level.rect)
 
-            #temp_walls = []
-            #for wall in level.traps:
-            #    surf = pygame.Surface((wall.w, wall.h))
-            #    surf.fill((0,0,255))
-            #    temp_walls.append((surf, wall))
-            #screen.blits(temp_walls)
+            if DEBUG:
+                temp_walls = []
+                for wall in level.walls:
+                    surf = pygame.Surface((wall.w, wall.h))
+                    surf.fill((0,0,255))
+                    temp_walls.append((surf, wall))
+                for trap in level.traps:
+                    surf = pygame.Surface((trap.w, trap.h))
+                    surf.fill((255,0,0))
+                    temp_walls.append((surf, trap))
+                for ladder in level.ladders:
+                    surf = pygame.Surface((ladder.w, ladder.h))
+                    surf.fill((0,255,0))
+                    temp_walls.append((surf, ladder))
+                screen.blits(temp_walls)
 
             screen.blit(player.image, player.img_point)
             screen.blits((spr.image, spr.rect) for spr in all_shots)
