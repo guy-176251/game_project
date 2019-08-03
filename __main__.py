@@ -1,3 +1,4 @@
+import os
 import pygame
 from const import *
 from utils import *
@@ -7,15 +8,24 @@ from level import Level
 
 def main():
 
+    if any(folder not in os.listdir() for folder in ('images', 'map', 'sounds')):
+        try:
+            os.chdir('game_project')
+        except:
+            print('The main folder/file name needs to be called "game_project" for the game to run.')
+            return
+
     pygame.init()
-    pygame.display.set_caption('Totally not MegaMan')
+    pygame.display.set_caption('MegaMan: Pump Man Stage')
 
     bg     = pygame.Surface(SCREEN_SIZE)
     screen = pygame.display.set_mode(SCREEN_SIZE)
     fps    = pygame.time.Clock()
 
     shot_img   = pygame.image.load('images/shot.png').convert_alpha()
+    death_img = pygame.image.load('images/death.png').convert_alpha()
     splash_img = pygame.image.load('images/splash.png').convert_alpha()
+    instructions_img = pygame.image.load('images/instructions.png').convert_alpha()
     enemy_img  = {
         d: [pygame.image.load(f'images/enemy/{d}/{n + 1}.png').convert_alpha()
             for n in range(4)]
@@ -29,8 +39,12 @@ def main():
     all_shots = pygame.sprite.Group()
     all_sprites = pygame.sprite.Group(player)
 
-    with open('map/dimensions.txt', 'r') as f:
+    with open('map/walls.txt', 'r') as f:
         walls = [eval(f'({r})') for r in f.read().split('\n')[1:] if r != '']
+    with open('map/traps.txt', 'r') as f:
+        traps = [eval(f'({r})') for r in f.read().split('\n') if r != '']
+    with open('map/ladders.txt', 'r') as f:
+        ladders = [eval(f'({r})') for r in f.read().split('\n') if r != '']
     with open('map/grid.txt', 'r') as f:
         grid = List([List(eval(f'[{l}]')) for l in f.read().split('\n') if l != ''])
 
@@ -39,6 +53,8 @@ def main():
         player = player,
         display = screen,
         walls = walls,
+        ladders=ladders,
+        traps=traps,
         grid = grid,
         shots =all_shots
     )
@@ -56,45 +72,79 @@ def main():
         screen.blit(splash_img, (0,0))
         pygame.display.flip()
 
+    # shows key controls
+    instructions_running = True
+    while instructions_running:
+        fps.tick(30)
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                instructions_running = False
+        screen.blit(level.image, (0,0))
+        screen.blit(instructions_img, (0,0))
+        pygame.display.flip()
+
     # game loop
     game_running = True
     while game_running:
-        fps.tick(60)
 
-        level.move(pygame.key.get_pressed())
-        all_shots.update()
+        while not level.if_dead:
+            fps.tick(60)
+            level.move(pygame.key.get_pressed())
+            all_shots.update()
 
-        for event in pygame.event.get():
-            if event.type == KEYDOWN and event.key == K_ESCAPE:
-                game_running = False
+            for event in pygame.event.get():
+                if event.type == KEYDOWN and event.key == K_ESCAPE:
+                    game_running = False
+                    return level.debug_info
 
-            elif event.type == QUIT:
-                game_running = False
+                elif event.type == QUIT:
+                    game_running = False
+                    return level.debug_info
 
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                all_shots.add(Shot(shot_img, player, SCREEN_SIZE[0]))
-                player.buster = BUSTER
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    all_shots.add(Shot(shot_img, player, SCREEN_SIZE[0]))
+                    player.buster = BUSTER
 
-            #elif event.type == ticks['animate'][0]:
-            elif event.type == ANIMATE:
-                all_sprites.update()
+                elif event.type == ANIMATE:
+                    all_sprites.update()
 
-        screen.blit(bg, (0,0))
-        screen.blit(level.image, level.rect)
+            screen.blit(bg, (0,0))
+            screen.blit(level.image, level.rect)
 
-        #temp_walls = []
-        #for wall in level.walls:
-        #    surf = pygame.Surface((wall.w, wall.h))
-        #    surf.fill((0,0,255))
-        #    temp_walls.append((surf, wall))
-        #screen.blits(temp_walls)
+            #temp_walls = []
+            #for wall in level.traps:
+            #    surf = pygame.Surface((wall.w, wall.h))
+            #    surf.fill((0,0,255))
+            #    temp_walls.append((surf, wall))
+            #screen.blits(temp_walls)
 
-        screen.blit(player.image, player.img_point)
-        screen.blits((spr.image, spr.rect) for spr in all_shots)
+            screen.blit(player.image, player.img_point)
+            screen.blits((spr.image, spr.rect) for spr in all_shots)
 
-        pygame.display.flip()
+            if DEBUG:
+                pygame.display.set_caption(f'{int(fps.get_fps())} FPS; {level.x}, {level.y}')
+            else:
+                pygame.display.set_caption(f'{int(fps.get_fps())} FPS')
 
-    print(level.test_grid)
-    print(level.test_coordinates)
+            pygame.display.flip()
 
-main()
+        death_screen = True
+        while death_screen:
+            fps.tick(30)
+            screen.blit(bg, (0,0))
+            screen.blit(level.image, level.rect)
+            screen.blit(death_img, (0,0))
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    level.reset()
+                    player.reset()
+                    death_screen = False
+                    level.if_dead = False
+
+
+if DEBUG:
+    print(main())
+else:
+    main()

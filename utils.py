@@ -12,7 +12,7 @@ class List:
         return len(self.list)
 
     def __bool__(self):
-        if not self.l:
+        if not self.list:
             return False
         else:
             return True

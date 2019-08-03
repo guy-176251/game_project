@@ -146,13 +146,16 @@ class Player(pygame.sprite.Sprite):
         self.rect.center = (self.screen.get_rect().centerx, 0)
 
         self.jump_tick     = 0
-        self.jump_steps    = [n**2 for n in range(9, 0, -1)]
+        self.jump_steps    = [n**2 for n in range(7, 0, -1)]
         self.max_jump_tick = len(self.jump_steps)
 
         self.rect.width = 30
         self.rect.height = 60
         self.width_gap = int((64 - self.rect.width) / 2)
         self.height_gap = 64 - self.rect.height
+
+        self.change_x   = 0
+        self.change_y   = 0
 
     @property
     def img_point(self):
@@ -187,10 +190,19 @@ class Player(pygame.sprite.Sprite):
 
         self.buster  = NONE
 
+    def reset(self):
+        self.move(-self.change_x, -self.change_y)
+
+        self.change_x   = 0
+        self.change_y   = 0
+
     def move(self, x, y):
+        self.change_x += x
+        self.change_y += y
+
         self.rect.move_ip(x, y)
 
-    def move_old(self, key_press):
+    def __move_old(self, key_press):
         if key_press[K_SPACE] and self.jump_tick < self.max_jump_tick:
             if not self.if_falling:
                 self.rect.move_ip(0, -70)

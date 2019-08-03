@@ -1,10 +1,7 @@
 import pygame
 from pygame.locals import *
 
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-BLUE  = (50, 50, 255)
+DEBUG = True
 
 FWD     = 'right'
 BACK    = 'left'
