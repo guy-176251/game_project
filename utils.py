@@ -1,3 +1,5 @@
+import pygame
+
 class List:
     def __init__(self, l):
         self.list = l
@@ -23,6 +25,14 @@ def sub(small, big):
         return 0
     else:
         return result
+
+def rect_to_surface(rects, color):
+    temp = []
+    for r in rects:
+        surf = pygame.Surface((r.w, r.h))
+        surf.fill(color)
+        temp.append((surf, r))
+    return temp
 
 All = lambda *args: all(args)
 Any = lambda *args: any(args)

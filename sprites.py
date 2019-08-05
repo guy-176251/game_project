@@ -63,8 +63,8 @@ class Enemy(pygame.sprite.Sprite):
         self.max_wait_tick = 10
         self.wait_tick = 0
 
-        self.max_move_tick = 10
-        self.move_tick = 0
+        self.max_walk_tick = 10
+        self.walk_tick = 0
 
         self.if_moving = False
         self.if_proximity = False
@@ -76,32 +76,36 @@ class Enemy(pygame.sprite.Sprite):
         else:
             return self.speed * -1
 
-    def update(self, *, animate = False, move = False):
+    def update(self, x = 0, y = 0, *, animate = False, walk = False):
 
         #if self.player.rect.centerx
 
+        if x or y:
+            self.move(x, y)
         if animate:
             pass
-        if move:
-            if self.move_tick < self.max_move_tick:
+        if walk:
+            if self.walk_tick < self.max_walk_tick:
                 self.move()
-                self.move_tick += 1
+                self.walk_tick += 1
                 self.if_moving = True
             else:
                 self.if_moving = False
 
+    def move(self, x, y):
+        self.rect.move_ip(x, y)
 
     def animate(self):
         # change image
         self.rect = self.image.get_rect()
         self.rect.midbottom = self.midbottom
 
-    def move(self):
-        move_value = self.rect.midbottom[0] + self.step
+    def walk(self):
+        walk_value = self.rect.midbottom[0] + self.step
 
-        if move_value > self.platform.right and self.fwd == FWD:
+        if walk_value > self.platform.right and self.fwd == FWD:
             self.fwd = BACK
-        elif move_value < self.platform.left and self.fwd == BACK:
+        elif walk_value < self.platform.left and self.fwd == BACK:
             self.fwd = FWD
 
         self.midbottom[0] += self.step

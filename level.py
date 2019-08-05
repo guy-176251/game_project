@@ -1,6 +1,8 @@
 import pygame
 from const import *
 from utils import *
+from sprites import *
+from random import choice, randint
 from pygame.locals import *
 
 class Level(pygame.sprite.Sprite):
@@ -11,7 +13,9 @@ class Level(pygame.sprite.Sprite):
                           traps: list,
                           display: pygame.Surface,
                           player: pygame.sprite.Sprite,
-                          shots: pygame.sprite.Group):
+                          shots: pygame.sprite.Group,
+                          enemies: pygame.sprite.Group,
+                          enemy_img: dict):
 
         self.image = pygame.image.load(image).convert_alpha()
 
@@ -28,6 +32,8 @@ class Level(pygame.sprite.Sprite):
         self.t_coordinates = set()
         self.player        = player
         self.shots         = shots
+        self.enemies       = enemies
+        self.enemy_img     = enemy_img
 
         self.if_dead  = False
         self.change_x = 0
@@ -51,6 +57,7 @@ class Level(pygame.sprite.Sprite):
         for ladder in self.ladders:
             ladder.move_ip(x, y)
         self.shots.update(y)
+        self.enemies.update(x,y)
 
     @property
     def debug_info(self):
@@ -63,6 +70,30 @@ class Level(pygame.sprite.Sprite):
     @property
     def y(self):
         return int((self.rect.y * -1 + self.player.rect.centery) / self.display.get_height())
+
+    def spawn(self):
+        bound = 100
+        spawn_walls = [
+            w for w in self.walls
+            if All(
+                w.width > ENEMY_WIDTH,
+                w.width < 200,
+                w.width > w.height,
+                All(Any(w.right < 0,  w.left > self.display.get_width()),
+                    Any(w.bottom < 0, w.top > self.display.get_height())),
+                All(Any(w.right >= -bound,
+                        w.left <= self.display.get_width() + bound),
+                    Any(w.top >= -bound,
+                        w.bottom <= self.display.get_height() + bound))
+                )
+        ]
+
+        wall = choice(spawn_walls)
+        self.enemies.add(Enemy(self.enemy_img,
+                               self.player,
+                               wall,
+                               self.display,
+                               wall.midtop))
 
     def move(self, key_press):
         if key_press[K_SPACE] and self.player.jump_tick < self.player.max_jump_tick and not self.player.if_falling:

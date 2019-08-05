@@ -28,7 +28,7 @@ def main():
     screen = pygame.display.set_mode(SCREEN_SIZE)
     fps    = pygame.time.Clock()
 
-    shot_img   = pygame.image.load('images/shot.png').convert_alpha()
+    shot_img = pygame.image.load('images/shot.png').convert_alpha()
     death_img = pygame.image.load('images/death.png').convert_alpha()
     splash_img = pygame.image.load('images/splash.png').convert_alpha()
     instructions_img = pygame.image.load('images/instructions.png').convert_alpha()
@@ -43,7 +43,8 @@ def main():
 
     player = Player(screen=screen)
     all_shots = pygame.sprite.Group()
-    all_sprites = pygame.sprite.Group(player)
+    enemies = pygame.sprite.Group()
+    all_sprites = pygame.sprite.Group(player, enemies)
 
     with open('map/walls.txt', 'r') as f:
         walls = [eval(f'({r})') for r in f.read().split('\n')[1:] if r != '']
@@ -59,35 +60,31 @@ def main():
         player = player,
         display = screen,
         walls = walls,
-        ladders=ladders,
-        traps=traps,
+        ladders = ladders,
+        traps = traps,
         grid = grid,
-        shots =all_shots
+        shots = all_shots,
+        enemies = enemies,
+        enemy_img = enemy_img
     )
 
     pygame.time.set_timer(ANIMATE, 120)
+    pygame.time.set_timer(SPAWN, 1000)
 
-    # splash loop
-    splash_running = True
-    while splash_running:
-        fps.tick(30)
-        for event in pygame.event.get():
-            if event.type == KEYDOWN:
-                splash_running = False
-        screen.blit(level.image, (0,0))
-        screen.blit(splash_img, (0,0))
-        pygame.display.flip()
+    intro = {
+        'splash': {'run': True, 'image': splash_img},
+        'instructions': {'run': True, 'image': instructions_img}
+    }
 
-    # shows key controls
-    instructions_running = True
-    while instructions_running:
-        fps.tick(30)
-        for event in pygame.event.get():
-            if event.type == KEYDOWN:
-                instructions_running = False
-        screen.blit(level.image, (0,0))
-        screen.blit(instructions_img, (0,0))
-        pygame.display.flip()
+    for thing in intro:
+        while intro[thing]['run']:
+            fps.tick(30)
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    intro[thing]['run'] = False
+            screen.blit(level.image, (0,0))
+            screen.blit(intro[thing]['image'], (0,0))
+            pygame.display.flip()
 
     # game loop
     game_running = True
@@ -115,26 +112,23 @@ def main():
                 elif event.type == ANIMATE:
                     all_sprites.update()
 
+                elif event.type == SPAWN:
+                    level.spawn()
+
             screen.blit(bg, (0,0))
             screen.blit(level.image, level.rect)
 
             if DEBUG:
-                temp_walls = []
-                for wall in level.walls:
-                    surf = pygame.Surface((wall.w, wall.h))
-                    surf.fill((0,0,255))
-                    temp_walls.append((surf, wall))
-                for trap in level.traps:
-                    surf = pygame.Surface((trap.w, trap.h))
-                    surf.fill((255,0,0))
-                    temp_walls.append((surf, trap))
-                for ladder in level.ladders:
-                    surf = pygame.Surface((ladder.w, ladder.h))
-                    surf.fill((0,255,0))
-                    temp_walls.append((surf, ladder))
-                screen.blits(temp_walls)
+                screen.blits(
+                    sum([rect_to_surface(r, c)
+                         for r, c in ((level.traps,   (255, 0, 0)),
+                                      (level.walls,   (0,0,255)),
+                                      (level.ladders, (0,255,0)))],
+                        [])
+                )
 
             screen.blit(player.image, player.img_point)
+            screen.blits((e.image, e.rect) for e in enemies)
             screen.blits((spr.image, spr.rect) for spr in all_shots)
 
             if DEBUG:
