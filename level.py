@@ -39,11 +39,16 @@ class Level(pygame.sprite.Sprite):
         self.change_x = 0
         self.change_y = 0
 
+        self.enemy_rect: pygame.Rect = self.enemy_img[FWD][3].get_rect()
+        self.all_walls = self.walls + self.ladders + self.traps
+
     def reset(self):
         self.move_all(-self.change_x, -self.change_y)
 
         self.change_x   = 0
         self.change_y   = 0
+
+        self.enemies.empty()
 
     def move_all(self, x, y):
         self.change_x += x
@@ -89,11 +94,14 @@ class Level(pygame.sprite.Sprite):
         ]
 
         wall = choice(spawn_walls)
-        self.enemies.add(Enemy(self.enemy_img,
-                               self.player,
-                               wall,
-                               self.display,
-                               wall.midtop))
+        self.enemy_rect.midbottom = wall.midtop
+
+        if not self.enemy_rect.collidelistall(self.all_walls):
+            self.enemies.add(Enemy(self.enemy_img,
+                                   self.player,
+                                   wall,
+                                   self.display,
+                                   wall.midtop))
 
     def move(self, key_press):
         if key_press[K_SPACE] and self.player.jump_tick < self.player.max_jump_tick and not self.player.if_falling:

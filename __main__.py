@@ -28,6 +28,8 @@ def main():
     screen = pygame.display.set_mode(SCREEN_SIZE)
     fps    = pygame.time.Clock()
 
+    bg.fill((0,0,0))
+
     shot_img = pygame.image.load('images/shot.png').convert_alpha()
     death_img = pygame.image.load('images/death.png').convert_alpha()
     splash_img = pygame.image.load('images/splash.png').convert_alpha()
@@ -39,12 +41,10 @@ def main():
 
     }
 
-    bg.fill((0,0,0))
-
     player = Player(screen=screen)
     all_shots = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
-    all_sprites = pygame.sprite.Group(player, enemies)
+    animated_sprites = pygame.sprite.Group(player, enemies)
 
     with open('map/walls.txt', 'r') as f:
         walls = [eval(f'({r})') for r in f.read().split('\n')[1:] if r != '']
@@ -69,7 +69,7 @@ def main():
     )
 
     pygame.time.set_timer(ANIMATE, 120)
-    pygame.time.set_timer(SPAWN, 1000)
+    pygame.time.set_timer(SPAWN, 250)
 
     intro = {
         'splash': {'run': True, 'image': splash_img},
@@ -77,13 +77,13 @@ def main():
     }
 
     for thing in intro:
+        imgs = [(level.image, (0,0)), (intro[thing]['image'], (0,0))]
         while intro[thing]['run']:
             fps.tick(30)
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     intro[thing]['run'] = False
-            screen.blit(level.image, (0,0))
-            screen.blit(intro[thing]['image'], (0,0))
+            screen.blits(imgs)
             pygame.display.flip()
 
     # game loop
@@ -110,7 +110,7 @@ def main():
                     buster_sound.play()
 
                 elif event.type == ANIMATE:
-                    all_sprites.update()
+                    animated_sprites.update()
 
                 elif event.type == SPAWN:
                     level.spawn()
@@ -128,8 +128,8 @@ def main():
                 )
 
             screen.blit(player.image, player.img_point)
-            screen.blits((e.image, e.rect) for e in enemies)
-            screen.blits((spr.image, spr.rect) for spr in all_shots)
+            enemies.draw(screen)
+            all_shots.draw(screen)
 
             if DEBUG:
                 pygame.display.set_caption(f'{int(fps.get_fps())} FPS; {level.x}, {level.y}')
@@ -139,11 +139,10 @@ def main():
             pygame.display.flip()
 
         death_screen = True
+        imgs = [(bg, (0,0)), (level.image, level.rect), (death_img, (0,0))]
         while death_screen:
             fps.tick(30)
-            screen.blit(bg, (0,0))
-            screen.blit(level.image, level.rect)
-            screen.blit(death_img, (0,0))
+            screen.blits(imgs)
             pygame.display.flip()
 
             for event in pygame.event.get():
