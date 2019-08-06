@@ -17,3 +17,5 @@ ANIMATE = pygame.USEREVENT + 1
 SPAWN   = pygame.USEREVENT + 2
 SCREEN_SIZE = (512, 448)
 ENEMY_WIDTH = 36
+TOP     = 'top'
+BOTTOM  = 'bottom'

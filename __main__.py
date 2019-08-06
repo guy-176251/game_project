@@ -123,7 +123,8 @@ def main():
                     sum([rect_to_surface(r, c)
                          for r, c in ((level.traps,   (255, 0, 0)),
                                       (level.walls,   (0,0,255)),
-                                      (level.ladders, (0,255,0)))],
+                                      (level.ladders, (0,255,0)),
+                                      (level.ladder_tops, (255,0,255)))],
                         [])
                 )
 

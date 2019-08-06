@@ -136,11 +136,12 @@ class Player(pygame.sprite.Sprite):
         self.run_ind   = 0
         self.run_cycle = True
 
-        self.fwd        = FWD
-        self.buster     = NONE
-        self.if_moving  = False
-        self.if_falling = False
-        self.if_running = False
+        self.fwd         = FWD
+        self.buster      = NONE
+        self.if_moving   = False
+        self.if_falling  = False
+        self.if_running  = False
+        self.if_climbing = False
 
         self.image  = self.imgs[STAND][FWD][NONE]
         self.rect: pygame.Rect = self.image.get_rect()
