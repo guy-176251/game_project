@@ -41,13 +41,15 @@ class Shot(pygame.sprite.Sprite):
 
 class Enemy(pygame.sprite.Sprite):
 
-    speed = 3
+    speed = 2
 
-    def __init__(self, images, player, platform, display, midbottom):
+    def __init__(self, images, player, platform, walls, shots, display, midbottom):
         super().__init__()
         self.images = images
         self.display = display
         self.player = player
+        self.walls = walls
+        self.shots = shots
         self.platform: pygame.Rect = platform
         self.midbottom = list(midbottom)
 
@@ -60,14 +62,15 @@ class Enemy(pygame.sprite.Sprite):
         self.rect: pygame.Rect = self.image.get_rect()
         self.rect.midbottom = self.midbottom
 
-        self.max_wait_tick = 10
+        self.max_wait_tick = 100
         self.wait_tick = 0
 
-        self.max_walk_tick = 10
+        self.max_walk_tick = 100
         self.walk_tick = 0
 
         self.if_moving = False
-        self.if_proximity = False
+
+        self.walk_ind = 0
 
     @property
     def step(self):
@@ -76,36 +79,71 @@ class Enemy(pygame.sprite.Sprite):
         else:
             return self.speed * -1
 
-    def update(self, x = 0, y = 0, *, animate = False, walk = False):
+    def update(self, animate = False, x = 0, y = 0):
 
-        #if self.player.rect.centerx
+        if pygame.sprite.spritecollide(self, self.shots, True):
+            self.kill()
+            return
 
         if x or y:
             self.move(x, y)
+            return
+
         if animate:
-            pass
-        if walk:
+            self.animate()
+            return
+
+        if self.wait_tick == self.max_wait_tick:
             if self.walk_tick < self.max_walk_tick:
-                self.move()
+                self.walk()
                 self.walk_tick += 1
                 self.if_moving = True
             else:
                 self.if_moving = False
+                self.wait_tick = 0
+                self.walk_tick = 0
+        else:
+            self.wait_tick += 1
 
     def move(self, x, y):
         self.rect.move_ip(x, y)
+        self.midbottom[0] += x
+        self.midbottom[1] += y
 
     def animate(self):
+        if self.if_moving:
+            self.image = self.images[self.fwd][self.walk_ind + 2]
+
+            if self.walk_ind:
+                self.walk_ind -= 1
+            else:
+                self.walk_ind += 1
+
+        else:
+            self.image = self.images[self.fwd][1]
+
         # change image
         self.rect = self.image.get_rect()
         self.rect.midbottom = self.midbottom
 
     def walk(self):
-        walk_value = self.rect.midbottom[0] + self.step
+        self.rect.x += self.step
 
-        if walk_value > self.platform.right and self.fwd == FWD:
+        if self.rect.collidelistall(self.walls):
+            wall = self.walls[self.rect.collidelistall(self.walls)[0]]
+
+            if self.fwd == FWD:
+                self.rect.right = wall.left
+                self.fwd = BACK
+            else:
+                self.rect.left = wall.right
+                self.fwd = FWD
+
+        if self.rect.right > self.platform.right and self.fwd == FWD:
+            self.rect.right = self.platform.right
             self.fwd = BACK
-        elif walk_value < self.platform.left and self.fwd == BACK:
+        elif self.rect.left < self.platform.left and self.fwd == BACK:
+            self.rect.left = self.platform.left
             self.fwd = FWD
 
         self.midbottom[0] += self.step
@@ -133,6 +171,16 @@ class Player(pygame.sprite.Sprite):
             for d in (FWD, BACK)
         }
 
+        self.imgs[CLIMB] = {
+            NONE: [pygame.image.load(f'images/player/climb/none/{n}.png').convert_alpha() for n in (1,2)],
+            BUSTER: {
+                d: pygame.image.load(f'images/player/climb/buster/{d}/1.png')
+                for d in (FWD, BACK)
+            }
+        }
+
+        self.climb_ind = 0
+
         self.run_ind   = 0
         self.run_cycle = True
 
@@ -151,7 +199,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.center = (self.screen.get_rect().centerx, 0)
 
         self.jump_tick     = 0
-        self.jump_steps    = [n**2 for n in range(8, 0, -1)]
+        self.jump_steps    = [n**2 for n in range(9, 0, -1)]
         self.max_jump_tick = len(self.jump_steps)
 
         self.rect.width = 30
@@ -168,7 +216,19 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
 
-        if self.if_falling:
+        if self.if_climbing:
+            if self.buster == NONE:
+                self.image = self.imgs[CLIMB][NONE][self.climb_ind]
+
+                if self.climb_ind:
+                    self.climb_ind -= 1
+                else:
+                    self.climb_ind += 1
+
+            else:
+                self.image = self.imgs[CLIMB][BUSTER][self.fwd]
+
+        elif self.if_falling:
             self.image = self.imgs[JUMP][self.fwd][self.buster]
 
         elif self.if_moving:

@@ -11,6 +11,7 @@ class Level(pygame.sprite.Sprite):
                           grid: list,
                           ladders: list,
                           traps: list,
+                          spawn_zones: list,
                           display: pygame.Surface,
                           player: pygame.sprite.Sprite,
                           shots: pygame.sprite.Group,
@@ -25,10 +26,13 @@ class Level(pygame.sprite.Sprite):
         self.walls   = [pygame.Rect(*w) for w in walls]
         self.ladders = [pygame.Rect(*l) for l in ladders]
         self.traps   = [pygame.Rect(*t) for t in traps]
+        self.spawn_zones = [pygame.Rect(*s) for s in spawn_zones]
         self.ladder_tops = [pygame.Rect(*r.topleft, r.w, 10) for r in self.ladders]
         self.grid    = grid
         self.t_grid  = [[0 for _ in range(len(self.grid[0]))]
                         for _ in range(len(self.grid))]
+
+        self.occupied_walls = []
 
         self.t_coordinates = set()
         self.player        = player
@@ -53,6 +57,7 @@ class Level(pygame.sprite.Sprite):
         self.change_y   = 0
 
         self.enemies.empty()
+        self.occupied_walls = []
 
     def move_all(self, x, y):
         self.change_x += x
@@ -67,8 +72,10 @@ class Level(pygame.sprite.Sprite):
             ladder.move_ip(x, y)
         for ladder in self.ladder_tops:
             ladder.move_ip(x, y)
+        for s in self.spawn_zones:
+            s.move_ip(x,y)
         self.shots.update(y)
-        self.enemies.update(x,y)
+        self.enemies.update(False, x,y)
 
     @property
     def debug_info(self):
@@ -95,19 +102,25 @@ class Level(pygame.sprite.Sprite):
                 All(Any(w.right >= -bound,
                         w.left <= self.display.get_width() + bound),
                     Any(w.top >= -bound,
-                        w.bottom <= self.display.get_height() + bound))
+                        w.bottom <= self.display.get_height() + bound)),
+                w.collidelist(self.spawn_zones),
+                w not in self.occupied_walls
                 )
         ]
 
-        wall = choice(spawn_walls)
-        self.enemy_rect.midbottom = wall.midtop
+        if spawn_walls:
+            wall = choice(spawn_walls)
+            self.occupied_walls.append(wall)
+            self.enemy_rect.midbottom = wall.midtop
 
-        if not self.enemy_rect.collidelistall(self.all_walls):
-            self.enemies.add(Enemy(self.enemy_img,
-                                   self.player,
-                                   wall,
-                                   self.display,
-                                   wall.midtop))
+            if not self.enemy_rect.collidelistall(self.all_walls):
+                self.enemies.add(Enemy(self.enemy_img,
+                                       self.player,
+                                       wall,
+                                       self.walls,
+                                       self.shots,
+                                       self.display,
+                                       wall.midtop))
 
     def camera_check(self, mode):
         if mode == TOP:

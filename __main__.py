@@ -44,7 +44,6 @@ def main():
     player = Player(screen=screen)
     all_shots = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
-    animated_sprites = pygame.sprite.Group(player, enemies)
 
     with open('map/walls.txt', 'r') as f:
         walls = [eval(f'({r})') for r in f.read().split('\n')[1:] if r != '']
@@ -54,6 +53,8 @@ def main():
         ladders = [eval(f'({r})') for r in f.read().split('\n') if r != '']
     with open('map/grid.txt', 'r') as f:
         grid = List([List(eval(f'[{l}]')) for l in f.read().split('\n') if l != ''])
+    with open('map/spawn_zones.txt', 'r') as f:
+        spawn_zones = [eval(f'({r})') for r in f.read().split('\n') if r != '']
 
     level = Level(
         image = 'map/image.png',
@@ -62,6 +63,7 @@ def main():
         walls = walls,
         ladders = ladders,
         traps = traps,
+        spawn_zones = spawn_zones,
         grid = grid,
         shots = all_shots,
         enemies = enemies,
@@ -94,6 +96,7 @@ def main():
             fps.tick(60)
             level.move(pygame.key.get_pressed())
             all_shots.update()
+            enemies.update()
 
             for event in pygame.event.get():
                 if event.type == KEYDOWN and event.key == K_ESCAPE:
@@ -110,7 +113,8 @@ def main():
                     buster_sound.play()
 
                 elif event.type == ANIMATE:
-                    animated_sprites.update()
+                    player.update()
+                    enemies.update(True)
 
                 elif event.type == SPAWN:
                     level.spawn()
@@ -121,7 +125,8 @@ def main():
             if DEBUG:
                 screen.blits(
                     sum([rect_to_surface(r, c)
-                         for r, c in ((level.traps,   (255, 0, 0)),
+                         for r, c in ((level.spawn_zones, (255,255,255)),
+                                      (level.traps,   (255, 0, 0)),
                                       (level.walls,   (0,0,255)),
                                       (level.ladders, (0,255,0)),
                                       (level.ladder_tops, (255,0,255)))],
