@@ -1,7 +1,7 @@
 import pygame
 from pygame.locals import *
 
-DEBUG = False
+DEBUG = True
 
 FWD     = 'right'
 BACK    = 'left'

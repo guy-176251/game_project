@@ -41,7 +41,7 @@ class Shot(pygame.sprite.Sprite):
 
 class Enemy(pygame.sprite.Sprite):
 
-    speed = 2
+    speed = 1
 
     def __init__(self, images, player, platform, walls, shots, display, midbottom):
         super().__init__()

@@ -46,7 +46,7 @@ class Level(pygame.sprite.Sprite):
         self.change_y = 0
 
         self.enemy_rect: pygame.Rect = self.enemy_img[FWD][3].get_rect()
-        self.all_walls = self.walls + self.ladders + self.traps
+        self.all_walls = self.walls + self.traps + self.ladder_tops
 
         self.current_ladder = None
 
@@ -103,7 +103,7 @@ class Level(pygame.sprite.Sprite):
                         w.left <= self.display.get_width() + bound),
                     Any(w.top >= -bound,
                         w.bottom <= self.display.get_height() + bound)),
-                w.collidelist(self.spawn_zones),
+                w.collidelistall(self.spawn_zones),
                 w not in self.occupied_walls
                 )
         ]
@@ -241,6 +241,8 @@ class Level(pygame.sprite.Sprite):
 
                 if DEBUG:
                     walls_hit += [self.traps[i] for i in self.player.rect.collidelistall(self.traps)]
+                    if len(walls_hit) > 1:
+                        print(f'walls hit: {self.x}, {self.y}; {len(walls_hit)}')
 
                 if walls_hit:
                     self.player.if_falling = False
@@ -289,13 +291,16 @@ class Level(pygame.sprite.Sprite):
 
             if self.player.if_moving:
 
-                walls_hit = [self.walls[i] for i in self.player.rect.collidelistall(self.walls)]
+                if not DEBUG:
+                    walls_hit = [self.walls[i] for i in self.player.rect.collidelistall(self.walls)]
+                else:
+                    walls_hit = [self.all_walls[i] for i in self.player.rect.collidelistall(self.all_walls)]
 
-                for wall in walls_hit:
+                if walls_hit:
                     if self.player.fwd == FWD:
-                        self.player.move(-self.player.rect.right + wall.left, 0)
+                        self.player.rect.right = walls_hit[0].left
                     else:
-                        self.player.move(-self.player.rect.left + wall.right, 0)
+                        self.player.rect.left = walls_hit[0].right
 
         if not DEBUG:
             traps_hit = [self.traps[i] for i in self.player.rect.collidelistall(self.traps)]
