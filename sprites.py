@@ -203,7 +203,7 @@ class Player(pygame.sprite.Sprite):
         self.max_jump_tick = len(self.jump_steps)
 
         self.rect.width = 30
-        self.rect.height = 60
+        self.rect.height = 55
         self.width_gap = int((64 - self.rect.width) / 2)
         self.height_gap = 64 - self.rect.height
 
@@ -256,10 +256,12 @@ class Player(pygame.sprite.Sprite):
         self.buster  = NONE
 
     def reset(self):
-        self.move(-self.change_x, -self.change_y)
+        #self.move(-self.change_x, -self.change_y)
 
-        self.change_x   = 0
-        self.change_y   = 0
+        #self.change_x   = 0
+        #self.change_y   = 0
+
+        self.rect.midtop = (256, 0)
 
     def move(self, x, y):
         self.change_x += x

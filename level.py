@@ -41,12 +41,13 @@ class Level(pygame.sprite.Sprite):
         self.enemy_img     = enemy_img
 
         self.if_dead  = False
+        self.if_win   = False
         self.if_in_pivot = False
         self.change_x = 0
         self.change_y = 0
 
         self.enemy_rect: pygame.Rect = self.enemy_img[FWD][3].get_rect()
-        self.all_walls = self.walls + self.traps + self.ladder_tops
+        self.all_walls = self.walls + self.traps
 
         self.current_ladder = None
 
@@ -64,18 +65,18 @@ class Level(pygame.sprite.Sprite):
         self.change_y += y
 
         self.rect.move_ip(x, y)
-        for wall in self.walls:
-            wall.move_ip(x, y)
-        for trap in self.traps:
-            trap.move_ip(x, y)
-        for ladder in self.ladders:
-            ladder.move_ip(x, y)
-        for ladder in self.ladder_tops:
-            ladder.move_ip(x, y)
-        for s in self.spawn_zones:
-            s.move_ip(x,y)
+
+        for cat in (self.walls,
+                    self.traps,
+                    self.ladder_tops,
+                    self.ladders,
+                    self.spawn_zones):
+
+            for rect in cat:
+                rect.move_ip(x, y)
+
         self.shots.update(y)
-        self.enemies.update(False, x,y)
+        self.enemies.update(False, x, y)
 
     @property
     def debug_info(self):
@@ -162,6 +163,12 @@ class Level(pygame.sprite.Sprite):
                 self.move_all(-diff, 0)
                 self.if_in_pivot = False
 
+            elif All(self.x == 14, self.y == 5, not self.if_in_pivot):
+                diff = -self.x * self.display.get_width() + -self.rect.x
+                self.player.move(diff, 0)
+                self.move_all(diff, 0)
+                self.if_in_pivot = True
+
         elif mode == BACK:
             if All(not self.if_in_pivot,
                    self.rect.x * -1 > self.display.get_width(),
@@ -200,7 +207,7 @@ class Level(pygame.sprite.Sprite):
                 self.camera_check(TOP)
 
                 if self.player.rect.top <= self.current_ladder.top:
-                    self.player.rect.bottom = self.current_ladder.top
+                    self.player.move(0, self.current_ladder.top - self.player.rect.bottom)
                     self.player.if_climbing = False
 
             elif key_press[K_s]:
@@ -208,7 +215,8 @@ class Level(pygame.sprite.Sprite):
                 self.camera_check(BOTTOM)
 
                 if self.player.rect.bottom >= self.current_ladder.bottom:
-                    self.player.rect.bottom = self.current_ladder.bottom
+                    #self.player.rect.bottom = self.current_ladder.bottom
+                    self.player.move(0, self.current_ladder.bottom - self.player.rect.bottom)
                     self.player.if_climbing = False
                     self.player.if_falling = True
 
@@ -221,6 +229,11 @@ class Level(pygame.sprite.Sprite):
                 self.player.jump_tick += 1
 
                 walls_hit = [w for w in self.walls if self.player.rect.colliderect(w)]
+
+                if DEBUG:
+                    walls_hit += [self.traps[i] for i in self.player.rect.collidelistall(self.traps)]
+                    if len(walls_hit) > 1:
+                        print(f'walls hit: {self.x}, {self.y}; {len(walls_hit)}')
 
                 if walls_hit:
                     self.player.if_falling = True
@@ -297,18 +310,30 @@ class Level(pygame.sprite.Sprite):
                     walls_hit = [self.all_walls[i] for i in self.player.rect.collidelistall(self.all_walls)]
 
                 if walls_hit:
+                    if DEBUG:
+                        print('\nwalls')
+                        print(' ' + '\n  '.join(str(w) for w in walls_hit))
                     if self.player.fwd == FWD:
-                        self.player.rect.right = walls_hit[0].left
+                        self.player.move(walls_hit[0].left - self.player.rect.right, 0)
                     else:
-                        self.player.rect.left = walls_hit[0].right
+                        self.player.move(walls_hit[0].right - self.player.rect.left, 0)
 
         if not DEBUG:
-            traps_hit = [self.traps[i] for i in self.player.rect.collidelistall(self.traps)]
-
-            if traps_hit:
+            if self.player.rect.collidelistall(self.traps):
                 self.if_dead = True
 
         if not self.player.if_falling and not key_press[K_SPACE]:
             self.player.jump_tick = 0
 
         self.t_grid[self.y][self.x] = self.grid[self.y][self.x]
+
+        if not DEBUG:
+            if pygame.sprite.spritecollide(self.player, self.enemies, False):
+                self.if_dead = True
+
+        if All(self.x == 14, self.y == 5, self.player.rect.centerx >= 256):
+            self.if_win = True
+            self.player.image = self.player.imgs[STAND][FWD][NONE]
+
+            if DEBUG:
+                print('win')

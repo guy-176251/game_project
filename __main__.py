@@ -32,6 +32,7 @@ def main():
 
     shot_img = pygame.image.load('images/shot.png').convert_alpha()
     death_img = pygame.image.load('images/death.png').convert_alpha()
+    win_img = pygame.image.load('images/win.png').convert_alpha()
     splash_img = pygame.image.load('images/splash.png').convert_alpha()
     instructions_img = pygame.image.load('images/instructions.png').convert_alpha()
     enemy_img  = {
@@ -71,7 +72,7 @@ def main():
     )
 
     pygame.time.set_timer(ANIMATE, 120)
-    pygame.time.set_timer(SPAWN, 250)
+    pygame.time.set_timer(SPAWN, 3000)
 
     intro = {
         'splash': {'run': True, 'image': splash_img},
@@ -92,7 +93,7 @@ def main():
     game_running = True
     while game_running:
 
-        while not level.if_dead:
+        while not level.if_dead and not level.if_win:
             fps.tick(60)
             level.move(pygame.key.get_pressed())
             all_shots.update()
@@ -144,9 +145,9 @@ def main():
 
             pygame.display.flip()
 
-        death_screen = True
         imgs = [(bg, (0,0)), (level.image, level.rect), (death_img, (0,0))]
-        while death_screen:
+
+        while level.if_dead:
             fps.tick(30)
             screen.blits(imgs)
             pygame.display.flip()
@@ -155,9 +156,21 @@ def main():
                 if event.type == KEYDOWN:
                     level.reset()
                     player.reset()
-                    death_screen = False
                     level.if_dead = False
 
+        imgs[2] = (player.image, player.img_point)
+        imgs.append((win_img, (0,0)))
+
+        while level.if_win:
+            fps.tick(30)
+            screen.blits(imgs)
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    level.reset()
+                    player.reset()
+                    level.if_win = False
 
 if DEBUG:
     print(main())
